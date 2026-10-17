@@ -24,6 +24,8 @@ W2 复习骨架 · 二刷（无参考答案版）
 
 from __future__ import annotations
 
+import argparse
+import csv
 import json
 import sys
 from datetime import date
@@ -58,14 +60,14 @@ RAW_OK = '{"date":"2026-10-01","desc":"星巴克","amount":"32.50","category":{"
 #
 # 查哪里：知识笔记 4.4
 def todo_a1_type_hints() -> None:
-    merchant = "星巴克"          # ← 这行是格式示范，不用改
+    merchant: str = "星巴克"  # ← 这行是格式示范，不用改
 
-    amount = Decimal("32.50")    # ← 补上类型注解
-    is_reimbursable = False      # ← 补上类型注解
+    amount: Decimal = Decimal("32.50")  # ← 补上类型注解
+    is_reimbursable: bool = False  # ← 补上类型注解
 
     # ← 在这里定义 is_expensive 函数
 
-    raise NotImplementedError("TODO A1")
+    # raise NotImplementedError("TODO A1")
 
 
 # ──────────────────────────────────────────────────────────────
@@ -83,7 +85,9 @@ def todo_a1_type_hints() -> None:
 # 查哪里：知识笔记 4.2 / 4.3
 class Category(BaseModel):
     """账单分类。把这段 docstring 换成你的字段定义。"""
-    # ← 在这里加两个字段（删掉注释、写上真正的字段）
+
+    level1: str
+    level2: str | None = None
 
 
 # ──────────────────────────────────────────────────────────────
@@ -104,7 +108,13 @@ class Category(BaseModel):
 # 查哪里：知识笔记 4.2 / 4.3
 class Expense(BaseModel):
     """一条账单记录。把这段 docstring 换成你的字段定义。"""
+
     # ← 在这里加五个字段
+    date: date
+    desc: str
+    amount: Decimal = Field(gt=0)
+    category: Category
+    note: str | None = None
 
 
 # ──────────────────────────────────────────────────────────────
@@ -122,7 +132,8 @@ class Expense(BaseModel):
 # 完成后删掉下面的 raise
 # 查哪里：知识笔记 3.1 / 3.3
 def todo_a4_validate() -> Expense:
-    raise NotImplementedError("TODO A4")
+    #  raise NotImplementedError("TODO A4")
+    return Expense.model_validate_json(RAW_OK)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -140,7 +151,14 @@ def todo_a4_validate() -> Expense:
 #
 # 查哪里：知识笔记 5.1 / 5.2
 def todo_a5_nested_and_error(expense: Expense) -> None:
-    raise NotImplementedError("TODO A5")
+    # raise NotImplementedError("TODO A5")
+    print(f"一级分类: {expense.category.level1}")
+    print(f"金额: {expense.amount}，类型: {type(expense.amount)}")
+    try:
+        bad_json = RAW_OK.replace('"32.50"', '"-5"')
+        Expense.model_validate_json(bad_json)
+    except ValidationError as e:
+        print(e.errors()[0]["type"])
 
 
 # ──────────────────────────────────────────────────────────────
@@ -162,7 +180,10 @@ def todo_a5_nested_and_error(expense: Expense) -> None:
 #
 # 查哪里：知识笔记 3.2
 def todo_a6_dump(expense: Expense) -> None:
-    raise NotImplementedError("TODO A6")
+    # raise NotImplementedError("TODO A6")
+    print("直接 dump:", expense.model_dump())
+    print("带 json 模式的 dump:", expense.model_dump(mode="json"))
+    print("直接出 JSON 字符串:", expense.model_dump_json(indent=2))
 
 
 # ──────────────────────────────────────────────────────────────
@@ -182,7 +203,8 @@ def todo_a6_dump(expense: Expense) -> None:
 #
 # 查哪里：知识笔记 3.4
 def todo_a7_schema() -> None:
-    raise NotImplementedError("TODO A7")
+    # raise NotImplementedError("TODO A7")
+    print(json.dumps(Expense.model_json_schema(), indent=2, ensure_ascii=False))
 
 
 # ──────────────────────────────────────────────────────────────
@@ -201,8 +223,17 @@ def todo_a7_schema() -> None:
 #
 # 查哪里：知识笔记 5.1 / 5.3
 BAD_JSON = '{"date":"昨天","desc":"午饭","amount":"很多"}'
+
+
 def todo_a8_graceful() -> None:
-    raise NotImplementedError("TODO A8")
+    # raise NotImplementedError("TODO A8")
+    try:
+        Expense.model_validate_json(BAD_JSON)
+    except ValidationError as e:
+        print("错误详情:", e.errors())
+        print(
+            "每个元素的四个键：type（错误类型）、loc（字段路径）、msg（错误信息）、input（原始值）"
+        )
 
 
 # ══════════════════════════════════════════════════════════════
@@ -237,7 +268,11 @@ def todo_a8_graceful() -> None:
 # 完成后删掉 raise
 # 查哪里：知识笔记 6.1
 def todo_b1_parse_args(argv: list[str] | None = None):
-    raise NotImplementedError("TODO B1")
+    # raise NotImplementedError("TODO B1")
+    paras = argparse.ArgumentParser(description="账单 CSV 汇总工具")
+    paras.add_argument("--file", required=True, help="账单 CSV 文件路径")
+    paras.add_argument("--category", help="只统计指定的一级分类")
+    return paras.parse_args(argv)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -256,7 +291,10 @@ def todo_b1_parse_args(argv: list[str] | None = None):
 # 完成后删掉 raise
 # 查哪里：知识笔记 6.2 / 6.3
 def todo_b2_read_rows(path: str) -> list[tuple[int, dict[str, str]]]:
-    raise NotImplementedError("TODO B2")
+    # raise NotImplementedError("TODO B2")
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        return [(i + 2, row) for i, row in enumerate(reader)]
 
 
 # ──────────────────────────────────────────────────────────────
@@ -275,7 +313,14 @@ def todo_b2_read_rows(path: str) -> list[tuple[int, dict[str, str]]]:
 # 提示：两种写法都行 —— 先造内层再造外层，或者直接喂嵌套字典让它递归校验
 # 查哪里：知识笔记 6.4
 def todo_b3_to_expense(row: dict[str, str]) -> Expense:
-    raise NotImplementedError("TODO B3")
+    # raise NotImplementedError("TODO B3")
+    return Expense(
+        date=row["date"],
+        category={"level1": row["level1"], "level2": row["level2"] or None},
+        amount=row["amount"],
+        desc=row["desc"],
+        note=row["note"] or None,
+    )
 
 
 # ──────────────────────────────────────────────────────────────
@@ -297,7 +342,24 @@ def todo_b3_to_expense(row: dict[str, str]) -> Expense:
 # 完成后删掉 raise
 # 查哪里：知识笔记 6.5
 def todo_b4_summarize(expenses: list[Expense]) -> list[dict]:
-    raise NotImplementedError("TODO B4")
+    # raise NotImplementedError("TODO B4")
+    summary = {}
+    total = Decimal("0")
+    for expense in expenses:
+        level1 = expense.category.level1
+        if level1 not in summary:
+            summary[level1] = {"count": 0, "total": Decimal("0")}
+        summary[level1]["count"] += 1
+        summary[level1]["total"] += expense.amount or Decimal("0")
+        total += expense.amount or Decimal("0")
+    for level1, data in summary.items():
+        data["share"] = data["total"] / total if total else Decimal("0")
+    return [
+        {"level1": level1, **data}
+        for level1, data in sorted(
+            summary.items(), key=lambda x: x[1]["total"], reverse=True
+        )
+    ]
 
 
 # ──────────────────────────────────────────────────────────────
@@ -322,7 +384,20 @@ def todo_b4_summarize(expenses: list[Expense]) -> list[dict]:
 # 完成后删掉 raise
 # 查哪里：知识笔记 6.6
 def todo_b5_render(summary: list[dict], total: Decimal, skipped: list[str]) -> None:
-    raise NotImplementedError("TODO B5")
+    # raise NotImplementedError("TODO B5")
+    print("     分类    笔数    总额        占比")
+    for item in summary:
+        print(
+            f"     {item['level1']:<8} {item['count']:<6} {item['total']:<10.2f} {item['share'] * 100:.1f}%"
+        )
+    print(
+        f"     总计     {sum(item['count'] for item in summary):<6} {total:<10.2f} 100.0%"
+    )
+    if skipped:
+        print()
+        print("     跳过的行（%d）：" % len(skipped))
+        for line in skipped:
+            print(line)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -347,12 +422,30 @@ def todo_b5_render(summary: list[dict], total: Decimal, skipped: list[str]) -> N
 # 完成后删掉 raise
 # 查哪里：知识笔记 5.1 / 5.3
 def todo_b6_main(argv: list[str] | None = None) -> int:
-    raise NotImplementedError("TODO B6")
+    # raise NotImplementedError("TODO B6")
+    args = todo_b1_parse_args(argv)
+    rows = todo_b2_read_rows(args.file)
+    expenses = []
+    skipped = []
+    for line_num, row in rows:
+        try:
+            expense = todo_b3_to_expense(row)
+            if args.category and expense.category.level1 != args.category:
+                continue
+            expenses.append(expense)
+        except ValidationError as e:
+            skipped.append(
+                f"{line_num} [{row.get('desc', '')}] → {e.errors()[0]['msg']}"
+            )
+    summary = todo_b4_summarize(expenses)
+    total = sum(item["total"] for item in summary)
+    todo_b5_render(summary, total, skipped)
+    return 0
 
 
 # ══════════════════════════════════════════════════════════════
 # 自检题（做完后口头回答）
-# ══════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════
 #  A1  为什么金额用高精度小数而不是 float？
 #  A2  「字段可空」和「字段有默认值」是一回事吗？
 #  A3  「必须大于 0」为什么写在模型里，而不是在函数里 if 判断？
@@ -405,6 +498,16 @@ def _check_expense() -> None:
         raise NotImplementedError("Expense 还没有字段")
     if "category" not in names:
         raise NotImplementedError("Expense 缺 category 字段（嵌套没写）")
+    if "amount" not in names:
+        raise NotImplementedError("Expense 缺 amount 字段")
+    # 光验字段名不够：约束才是拦截越界数据的依据。
+    # 漏了约束，负金额会一路混进统计（2026-10-17 真实漏网）。
+    meta = getattr(Expense.model_fields["amount"], "metadata", []) or []
+    if not any(getattr(m, "gt", None) == 0 for m in meta):
+        raise AssertionError(
+            "amount 缺「必须大于 0」的约束 —— 只写类型不够，"
+            "约束才是把越界数据拦在门外的依据（查知识笔记 4.3）"
+        )
     print(f"   字段: {names}")
 
 
@@ -419,8 +522,14 @@ def run_pydantic_checks() -> None:
         ("TODO A2 单层模型 Category", _check_category),
         ("TODO A3 嵌套模型 Expense", _check_expense),
         ("TODO A4 入口：JSON → 对象", lambda: _need_expense(todo_a4_validate())),
-        ("TODO A5 嵌套访问 + 造错", lambda: todo_a5_nested_and_error(_need_expense(todo_a4_validate()))),
-        ("TODO A6 出口：对象 → dict", lambda: todo_a6_dump(_need_expense(todo_a4_validate()))),
+        (
+            "TODO A5 嵌套访问 + 造错",
+            lambda: todo_a5_nested_and_error(_need_expense(todo_a4_validate())),
+        ),
+        (
+            "TODO A6 出口：对象 → dict",
+            lambda: todo_a6_dump(_need_expense(todo_a4_validate())),
+        ),
         ("TODO A7 规格：JSON Schema", todo_a7_schema),
         ("TODO A8 兜底：坏数据不崩", todo_a8_graceful),
     ]
@@ -454,7 +563,9 @@ def run_cli(argv: list[str]) -> None:
         raise SystemExit(todo_b6_main(argv))
     except NotImplementedError as e:
         print(f"⬜ 还有 TODO 没填：{e}")
-        print("   填完再跑：.venv/bin/python w2_review_skeleton.py --file sample_bills.csv")
+        print(
+            "   填完再跑：.venv/bin/python w2_review_skeleton.py --file sample_bills.csv"
+        )
         raise SystemExit(1) from None
     except SystemExit:
         raise
@@ -466,6 +577,6 @@ def run_cli(argv: list[str]) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        run_cli(sys.argv[1:])       # 带参数 = 跑 PART B（CLI）
+        run_cli(sys.argv[1:])  # 带参数 = 跑 PART B（CLI）
     else:
-        run_pydantic_checks()       # 不带参数 = 跑 PART A 自检
+        run_pydantic_checks()  # 不带参数 = 跑 PART A 自检
