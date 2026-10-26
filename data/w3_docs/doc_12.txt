@@ -1,0 +1,1 @@
+向量数据库选型对比。Milvus 生态成熟但运维重；Qdrant 轻量、过滤能力强；pgvector 与现有 PG 兼容最好。综合评估建议先用 pgvector 验证，再决定是否迁移。
