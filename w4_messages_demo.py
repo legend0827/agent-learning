@@ -1,6 +1,6 @@
 """W4 练习骨架 · messages 数组与「模型无状态」
 
-今晚（10-26）只验证一件事：**历史是你在代码里维护的，不是模型记得的。**
+今晚（10-26）只验证一件事：历史是你在代码里维护的，不是模型记得的。
 
 用法：
     .venv/bin/python w4_messages_demo.py
@@ -45,7 +45,7 @@ def call_llm(messages: list[dict]) -> dict:
 def run_round_1() -> dict:
     """TODO D1：第一轮
 
-    构造 messages：**只放一条 user 消息**，让模型记住数字 42。
+    构造 messages：只放一条 user 消息，让模型记住数字 42。
     调用 call_llm，返回：
         {"messages": 你实际发出去的 messages, "reply": 模型回答, "usage": usage}
     要求：不要加 system 消息，保持变量单一。
@@ -68,8 +68,8 @@ def run_round_1() -> dict:
 def run_round_2() -> dict:
     """TODO D2：第二轮
 
-    构造 messages：**只放一条 user 消息**，问「刚才我让你记住的数字是多少？」
-    关键：**不要带第一轮的任何内容**，也不要加 system。
+    构造 messages：只放一条 user 消息，问「刚才我让你记住的数字是多少？」
+    关键：不要带第一轮的任何内容，也不要加 system。
     这一轮就是「模型不记得」的对照组。
     返回结构同 D1。
     """
@@ -98,7 +98,7 @@ def run_round_3() -> dict:
 
     提示：
     - 先调 run_round_1() 拿到 reply，再拼第 2 条
-    - 第 2 条的 content 必须是**第一轮真实的回答**，不能自己编
+    - 第 2 条的 content 必须是【第一轮真实的回答】，不能自己编
     - 会多打一次 API，成本可忽略
     返回结构同 D1。
     """

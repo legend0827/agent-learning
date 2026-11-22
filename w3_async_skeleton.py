@@ -39,7 +39,7 @@ async def blocking_say_after(delay: float, msg: str) -> str:
 
 def todo_a1():
     """TODO A1：
-    调用 say_after(0.1, "A")，但**不要 await**，把返回值存下来并返回。
+    调用 say_after(0.1, "A")，但【不要 await】，把返回值存下来并返回。
     提示：返回的东西不是字符串，是「一张待办券」。
     """
     coro = say_after(0.1, "A")  # 调用协程函数，返回一个 coroutine 对象

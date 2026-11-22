@@ -51,7 +51,7 @@ class ExtractedInfo(BaseModel):
     字段要求：
     - title: str，2–40 字
     - summary: str，10–80 字
-    - tags: list[str]，**恰好 3 个**
+    - tags: list[str]，【恰好 3 个】
     - sentiment: Literal["positive", "neutral", "negative"]
 
     提示：Field(min_length=..., max_length=...)
@@ -115,7 +115,7 @@ def build_messages(text: str) -> list[dict]:
     """TODO B2：构造 messages
 
     要求：
-    - system：说明角色是「金融文档信息抽取助手」，**只返回 JSON**，不要解释、不要 markdown
+    - system：说明角色是「金融文档信息抽取助手」，【只返回 JSON】，不要解释、不要 markdown
     - user：写清 4 个字段的要求，并把原文附上
     - 必须出现 "JSON" 字样（DeepSeek 的 json_object 模式要求 prompt 里提到 json）
     """
@@ -172,7 +172,7 @@ async def extract_one(client: httpx.AsyncClient, path: Path) -> dict:
     4. 用 ExtractedInfo.model_validate_json(...) 校验
     5. 成功返回：
        {"file": path.name, "ok": True, "data": info.model_dump(), "usage": {...}}
-    6. **任何异常都不要抛出**，返回：
+    6. 【任何异常都不要抛出】，返回：
        {"file": path.name, "ok": False, "error": "简短原因"}
 
     提示：单文件失败不能拖垮整批 —— 这就是 W2 学的「降级，不是吞掉」。
@@ -218,7 +218,7 @@ async def run_async(
     要求：
     1. 用 asyncio.Semaphore(concurrency) 限制同时在飞的请求数
        （不限流的话，20 个一起打过去容易触发限流 / 超时）
-    2. 整个批次**共用一个** httpx.AsyncClient（不要每个文件建一个）
+    2. 整个批次【共用一个】 httpx.AsyncClient（不要每个文件建一个）
        —— httpx.AsyncClient 支持 async with
     3. 用 asyncio.gather 并发，结果顺序 = 传入顺序
     4. 返回 (results, 总耗时秒)
@@ -272,6 +272,7 @@ def extract_one_sync(client: httpx.Client, path: Path) -> dict:
         }
     except Exception as e:
         return {"file": path.name, "ok": False, "error": str(e)}
+
 
 def run_sync(paths: list[Path]) -> tuple[list[dict], float]:
     """TODO B5：同步版，一个一个处理

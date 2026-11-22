@@ -1,6 +1,6 @@
 """W4 练习骨架 · 流式输出（10-27）
 
-今天要回答一个问题：**流式到底改善了什么？**
+今天要回答一个问题：流式到底改善了什么？
 —— 不是总耗时，是「首字时间」（TTFT）。
 
 用法：
@@ -45,7 +45,7 @@ def _headers() -> dict:
 def call_blocking() -> dict:
     """TODO S1：非流式调用
 
-    用 httpx.Client POST，payload 里**不要**加 stream。
+    用 httpx.Client POST，payload 里【不要】加 stream。
     返回：{"text": 完整回答, "elapsed": 总耗时秒}
     """
     # raise NotImplementedError("S1 未完成")
@@ -73,7 +73,7 @@ def call_streaming() -> dict:
     2. 用 client.stream("POST", ...) 打开流
     3. 逐行读：只处理以 "data: " 开头的行；遇到 "[DONE]" 就 break
     4. 解析每行 JSON，取 choices[0].delta.content
-    5. **content 可能是 None，必须判断**；有内容就 print(..., end="", flush=True)
+    5. content 可能是 None，必须判断；有内容就 print(..., end="", flush=True)
     6. 记录第一个非空 content 出现的时间（TTFT）
 
     返回：{"text": 拼接后的完整文本, "ttft": 首字秒数, "elapsed": 总耗时, "chunks": 有内容的片段数}

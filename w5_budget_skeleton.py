@@ -1,6 +1,6 @@
 """W5 练习骨架 · 上下文预算（11-04）
 
-今天要回答一个问题：**这一轮对话要花多少钱，我怎么在发出去之前就知道？**
+今天要回答一个问题：这一轮对话要花多少钱，我怎么在发出去之前就知道？
 
 前天管「这一轮说什么」（system 五段式），昨天管「怎么让它少猜」（few-shot + 标签），
 今天管「这段上下文值不值得发」—— 把 token 从"感觉"变成"能算的数字"。
@@ -18,8 +18,8 @@
 规则：
 1. 每个 TODO 自己写，别抄检查器里的期望值（照着填数字不算会）
 2. 自检只证明「行为对了」，不证明「你想清楚了」—— 文末 3 道题才是真验收
-3. **默认运行不花钱**：自检全部用假 call，一行网络请求都没有
-4. 今天最低要求：**B1 + B2**。B3–B4 明晚 11-05 开头 30 分钟补
+3. 【默认运行不花钱】：自检全部用假 call，一行网络请求都没有
+4. 今天最低要求：【B1 + B2】。B3–B4 明晚 11-05 开头 30 分钟补
    （明天做 CLI 骨架时要 import B1–B2 来显示成本，所以 B1–B2 不能欠）
 """
 
@@ -109,7 +109,7 @@ def estimate_text_tokens(text: str) -> int:
     规则（用 CJK_RATIO 和 ASCII_CHARS_PER_TOKEN）：
         1. 数出汉字个数 cjk（Unicode 区间 \u4e00-\u9fff），其余算 other = len(text) - cjk
         2. token ≈ cjk * CJK_RATIO + other / ASCII_CHARS_PER_TOKEN
-        3. **向上取整**（用已给好的 _round_up）—— 宁可高估一点，闸门才有刹车作用
+        3. 【向上取整】（用已给好的 _round_up）—— 宁可高估一点，闸门才有刹车作用
         4. 空字符串 → 0
 
     自检只校验系数落在合理区间，不校验你的取整方式。
@@ -131,7 +131,7 @@ def estimate_messages_tokens(messages: list[dict]) -> int:
         sum(每条 content 的 estimate_text_tokens) + MSG_OVERHEAD * len(messages)
 
     要求：
-        1. **必须加上结构开销** —— 不加的话，短消息多的长对话会严重低估
+        1. 【必须加上结构开销】 —— 不加的话，短消息多的长对话会严重低估
         2. 空列表 → 0
         3. content 可能是空字符串，要能处理
         4. 不要修改传入的 messages（函数不该有副作用）
@@ -158,7 +158,7 @@ def cost_of(
     cache_hit_tokens: int = 0,
     cache_price_ratio: float = 0.1,
 ) -> dict:
-    """TODO B2：算这一轮花了多少钱，**分项**返回
+    """TODO B2：算这一轮花了多少钱，【分项】返回
 
     返回：
         {
@@ -223,7 +223,7 @@ def project_total_tokens(fixed_tokens: int, round_tokens: int, rounds: int) -> i
         累计 = rounds * fixed_tokens + round_tokens * rounds * (rounds - 1) / 2
                └──── 固定成本 ────┘        └────── 变动成本（平方项）──────┘
 
-    两个参数的定义（**别搞混，搞混了数字差 4%**）：
+    两个参数的定义（别搞混，搞混了数字差 4%）：
         fixed_tokens = 每轮固定都要发的那部分
                        = system + few-shot 例子 + 本轮提问
         round_tokens = 每轮沉淀进历史的新增
@@ -241,7 +241,7 @@ def project_total_tokens(fixed_tokens: int, round_tokens: int, rounds: int) -> i
     校验点（自检会真的算给你看）：
         fixed=1000, round=500 时
         N=20 → 115000，N=40 → 430000，比值 ≈ 3.74
-        也就是说 **轮数翻倍，成本接近 4 倍**，不是 2 倍。
+        也就是说 轮数翻倍，成本接近 4 倍，不是 2 倍。
 
     为什么不能写成 rounds * (fixed + round)：那是线性增长，
     会让你把 20 轮的成本低估一半以上 —— 然后你在产品里承诺了一个你付不起的价格。
@@ -281,24 +281,24 @@ def guard(
           "response":  dict | None, # call 的返回；没发就是 None
         }
 
-    执行顺序（**顺序不能反，这是今天的核心**）：
+    执行顺序（顺序不能反，这是今天的核心）：
         1. 先算 predicted = estimate(messages)
         2. predicted <= budget_tokens → 不裁，直接 call，reason="ok"
-        3. 超了 → 裁掉**中间**的历史，只留 system + 最近 keep_recent 组问答 + 最后一条 user
+        3. 超了 → 裁掉【中间】的历史，只留 system + 最近 keep_recent 组问答 + 最后一条 user
            - 再算一次 predicted
            - 放得下 → call，reason="trimmed"
-           - 放不下 → **不 call**，allowed=False，reason="over_budget"，response=None
-        4. 任何情况下都**不许修改传入的 messages**（返回新列表）
+           - 放不下 → 【不 call】，allowed=False，reason="over_budget"，response=None
+        4. 任何情况下都不许修改传入的 messages（返回新列表）
 
     裁剪的三个硬约束：
         a. 第 0 条 system 必须保留
         b. 最后一条（当前提问）必须保留
-        c. 中间只能**成对**丢（user+assistant 是一组，只丢一半会让模型看到"半个对话"）
+        c. 中间只能【成对】丢（user+assistant 是一组，只丢一半会让模型看到"半个对话"）
            裁剪后 roles 必须是：["system"] + ["user","assistant"] * k + ["user"]
 
-    keep_recent 的含义：保留最近几**组**问答（1 组 = user + assistant）。
+    keep_recent 的含义：保留最近几【组】问答（1 组 = user + assistant）。
 
-    ⚠️ 检查器会用一个「计数假 call」验证：over_budget 时**调用次数必须是 0**。
+    ⚠️ 检查器会用一个「计数假 call」验证：over_budget 时【调用次数必须是 0】。
        这就是「闸门必须在 call 之前」唯一能被机器拦住的方式。
 
     「先算，再处置，处置不了就不发」（§4.6）

@@ -1,6 +1,6 @@
 """W4 练习骨架 · 结构化输出 + 校验 + 一次重试（10-28）
 
-今天要回答一个问题：**模型返回的"合法 JSON"，为什么还是不能用？**
+今天要回答一个问题：模型返回的"合法 JSON"，为什么还是不能用？
 —— 因为 json_object 保证的是格式，不是语义。
 
 用法：
@@ -17,7 +17,7 @@
 规则：
 1. 每个 TODO 自己写
 2. 自动检查只是行为检查，文末 3 道题才是真验收
-3. **默认运行不花钱** —— E2/E4/E5 的检查全部注入假 call，只有 --real 才真调 API
+3. 【默认运行不花钱】 —— E2/E4/E5 的检查全部注入假 call，只有 --real 才真调 API
 """
 
 from __future__ import annotations
@@ -126,7 +126,7 @@ class ExtractedDoc(BaseModel):
         items: list[str] = Field(default_factory=list, max_length=3)
 
     ⚠️ 提醒：W2 你漏写 `gt=0`，负金额就静默漏进来了。
-        Pydantic 默认**不拦**任何范围问题，全靠你写的约束。
+        Pydantic 默认【不拦】任何范围问题，全靠你写的约束。
     """
 
     # pass
@@ -204,7 +204,7 @@ def e3_probe_bad_outputs() -> list[dict]:
 
     返回：[{"name": 名称, "caught": bool, "loc": ..., "type": ..., "msg": ...}, ...]
 
-    提示：`e.errors()` 返回一个列表，取第一条；`loc` 是**元组**，转成字符串方便看。
+    提示：`e.errors()` 返回一个列表，取第一条；`loc` 是【元组】，转成字符串方便看。
     """
     # raise NotImplementedError("E3 未完成")
     results = []
@@ -241,7 +241,7 @@ def extract_with_retry(
     返回：{"ok": bool, "doc": ExtractedDoc | None, "attempts": int,
            "error": str | None, "usage": {"in": int, "out": int}}
 
-    `usage` 是本文件的**累计**消耗 —— 重试那次的 token 也要加进去。
+    `usage` 是本文件的【累计】消耗 —— 重试那次的 token 也要加进去。
     （真实场景里，重试成本往往是"优化一次通过率"的隐性代价，必须能算全。）
 
     流程：
@@ -326,12 +326,12 @@ def run_batch(
     }
 
     步骤：
-        1. 遍历 paths，读文件（**encoding="utf-8-sig"** —— W2 的 BOM 坑）
+        1. 遍历 paths，读文件（encoding="utf-8-sig" —— W2 的 BOM 坑）
         2. 调 extract_with_retry(text, call=call)
         3. 按 attempts 归类计数
         4. 提醒自己：gather 的返回顺序 = 传入顺序（W3），这里用 for 循环更简单
 
-    ⚠️ 这一版**不要求并发**。今天要的是「度量」，不是「更快」——
+    ⚠️ 这一版【不要求并发】。今天要的是「度量」，不是「更快」——
        先把一次通过率测准，明天（10-29）再考虑接并发。
     """
     # raise NotImplementedError("E5 未完成")

@@ -1,0 +1,137 @@
+{
+  "captured_at": "2026-11-15",
+  "model": "deepseek-flash",
+  "messages_raw": [
+    {
+      "role": "system",
+      "content": "你在用户本地的工作目录里工作。任何涉及文件内容的问题，必须先调用 read_file 读取，不要凭记忆或猜测回答；要找「哪一节讲过某个概念」用 search_docs。工具返回错误时，根据错误原因调整参数重试一次，仍失败就如实告诉用户。回答只用中文，不超过 120 字。"
+    },
+    {
+      "role": "user",
+      "content": "这个项目的 README 写了什么？另外有没有哪一节提到 agent？"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_r1",
+          "type": "function",
+          "function": {
+            "name": "read_file",
+            "arguments": "{\"path\": \"README.md\", \"max_lines\": 80}"
+          }
+        },
+        {
+          "id": "call_r2",
+          "type": "function",
+          "function": {
+            "name": "search_docs",
+            "arguments": "{\"query\": \"agent\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_r1",
+      "content": "# agent-learning\n记录我从 PM 转向 AI Agent 的 6 个月"
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_r2",
+      "content": "README.md:1:agent-learning"
+    },
+    {
+      "role": "assistant",
+      "content": "README 只有两行：标题是 agent-learning，第二行写的是「记录我从 PM 转向 AI Agent 的 6 个月」。「agent」出现在 README.md 第 1 行的标题里。"
+    }
+  ],
+  "transcript": [
+    {
+      "index": 1,
+      "role": "system",
+      "author": "你",
+      "body": "你在用户本地的工作目录里工作。任何涉及文件内容的问题，必须先调用 read_file 读取，不要凭记忆或猜测回答；要找「哪一节讲过某个概念」用 search_docs。工具返回错误时，根据错误原因调整参数重试一次，仍失败就如实告诉用户。回答只用中文，不超过 120 字。",
+      "tool_call_id": null
+    },
+    {
+      "index": 2,
+      "role": "user",
+      "author": "你",
+      "body": "这个项目的 README 写了什么？另外有没有哪一节提到 agent？",
+      "tool_call_id": null
+    },
+    {
+      "index": 3,
+      "role": "assistant",
+      "author": "模型",
+      "body": "（None）\n[tool_call] id=call_r1 name=read_file arguments={\"path\": \"README.md\", \"max_lines\": 80}\n[tool_call] id=call_r2 name=search_docs arguments={\"query\": \"agent\"}",
+      "tool_call_id": null
+    },
+    {
+      "index": 4,
+      "role": "tool",
+      "author": "你的代码",
+      "body": "# agent-learning\n记录我从 PM 转向 AI Agent 的 6 个月\n[tool_call_id] call_r1",
+      "tool_call_id": "call_r1"
+    },
+    {
+      "index": 5,
+      "role": "tool",
+      "author": "你的代码",
+      "body": "README.md:1:agent-learning\n[tool_call_id] call_r2",
+      "tool_call_id": "call_r2"
+    },
+    {
+      "index": 6,
+      "role": "assistant",
+      "author": "模型",
+      "body": "README 只有两行：标题是 agent-learning，第二行写的是「记录我从 PM 转向 AI Agent 的 6 个月」。「agent」出现在 README.md 第 1 行的标题里。",
+      "tool_call_id": null
+    }
+  ],
+  "chain": [
+    {
+      "index": 1,
+      "kind": "rule",
+      "purpose": "给出本轮任务与硬规则，每次请求都要原样重发一遍"
+    },
+    {
+      "index": 2,
+      "kind": "ask",
+      "purpose": "用户提出本轮要解决的问题，是整条链的起点"
+    },
+    {
+      "index": 3,
+      "kind": "order",
+      "purpose": "模型下 2 张单（read_file、search_docs），它自己一行代码都没执行"
+    },
+    {
+      "index": 4,
+      "kind": "result",
+      "purpose": "你的代码执行完把结果塞回（call_r1），模型靠它才看得见工具干了什么"
+    },
+    {
+      "index": 5,
+      "kind": "result",
+      "purpose": "你的代码执行完把结果塞回（call_r2），模型靠它才看得见工具干了什么"
+    },
+    {
+      "index": 6,
+      "kind": "answer",
+      "purpose": "模型基于 tool 结果给出最终回答，本轮对话到此结束"
+    }
+  ],
+  "ledger": {
+    "requests": 2,
+    "total_in": 1836,
+    "total_out": 142,
+    "cost": 0.002404,
+    "first_in": 652,
+    "last_in": 1184,
+    "growth_x": 1.82,
+    "fixed_repeat": 800,
+    "cheapest_fix": "少一轮请求最省：tools schema 固定 800 token 被重发 2 遍，且历史每轮整段重发（输入已涨到 1184）；先压缩 history 与固定成本，再谈并行"
+  }
+}

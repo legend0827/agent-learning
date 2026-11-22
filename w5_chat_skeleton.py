@@ -1,6 +1,6 @@
 """W5 练习骨架 · CLI 聊天助手 v1 状态机（11-05）
 
-今天要回答一个问题：**多轮对话的「记忆」到底放在哪，失败时怎么不把它弄脏？**
+今天要回答一个问题：多轮对话的「记忆」到底放在哪，失败时怎么不把它弄脏？
 
 W4 已经证明模型是无状态的 —— 它什么都不记得。所以「记得上一轮说了什么」这件事
 100% 是你的代码的责任。本文件就是把这份责任写清楚：
@@ -21,8 +21,8 @@ W4 已经证明模型是无状态的 —— 它什么都不记得。所以「记
 规则：
 1. 每个 TODO 自己写，别抄检查器里的期望值（照着填数字不算会）
 2. 自检只证明「行为对了」，不证明「你想清楚了」—— 文末 3 道题才是真验收
-3. **默认运行不花钱**：自检全部注入假 call，一行网络请求都没有
-4. ⚠️ **C5 默认依赖 11-04 的 B1 / B2**（`estimate_messages_tokens` / `cost_of`）。
+3. 【默认运行不花钱】：自检全部注入假 call，一行网络请求都没有
+4. ⚠️ C5 默认依赖 11-04 的 B1 / B2（`estimate_messages_tokens` / `cost_of`）。
    没补 B1–B2 时，`--real` 循环里显示成本会抛 NotImplementedError —— 这是故意的，
    不是 bug。自检允许注入假函数，所以自检不受影响。
 """
@@ -100,7 +100,7 @@ def stream_llm(messages: list[dict]) -> Iterator[dict]:
     """真实流式调用 —— 已给好，产出统一的 chunk 形状。
 
     产出：若干 {"delta": str}，最后一个 {"done": True, "usage": {...}}。
-    SSE 里的 [DONE] 在这里被翻译成 done，**C4 不用再处理字符串协议**。
+    SSE 里的 [DONE] 在这里被翻译成 done，C4 不用再处理字符串协议。
     （W4 的教训：先判 [DONE] 再 json.loads，且不要把 str 编码成 bytes。）
     """
     payload = {
@@ -144,11 +144,11 @@ def new_session(system: str) -> dict:
 
     返回一个 dict，必须包含三个键：
         "system"      : 传入的 system 原文（不要改写、不要加时间戳）
-        "history"     : 空列表，只存 user / assistant，**永远不存 system**
+        "history"     : 空列表，只存 user / assistant，永远不存 system
         "total_usage" : {"in": 0, "out": 0}，累计真实 token
 
     要求：
-        1. 每次调用都返回**全新的对象** —— 两次 new_session 的 history 不能是同一个 list
+        1. 每次调用都返回【全新的对象】 —— 两次 new_session 的 history 不能是同一个 list
            （用全局 list 或可变默认参数都会让两个会话串味）
         2. system 原样保存。时间戳写进 system 会作废前缀缓存（§4.5）
         3. 不要在这里做任何网络请求
@@ -176,7 +176,7 @@ def build_messages(session: dict, user_text: str) -> list[dict]:
         [{"role": "system", ...}] + session["history"] + [{"role": "user", ...}]
 
     要求：
-        1. **不修改 session**：不能 append、不能改里面的 dict
+        1. 不修改 session：不能 append、不能改里面的 dict
         2. 返回的列表要能安全被改动 —— history 里每条消息复制一份，
            调用方改返回值不能反过来污染 session（W5 P4 同一个坑）
         3. history 里若混入 role="system"，直接 raise ValueError
@@ -184,7 +184,7 @@ def build_messages(session: dict, user_text: str) -> list[dict]:
         4. 空 history 时结果恰好 2 条
         5. 不要在这里调用任何 call / stream
 
-    这一条就是 W4「模型无状态」的落地：**每一轮都把完整历史重发一遍**。
+    这一条就是 W4「模型无状态」的落地：每一轮都把完整历史重发一遍。
     """
     # raise NotImplementedError("C2 未完成")
     messages = [{"role": "system", "content": session["system"]}]
@@ -207,14 +207,14 @@ def run_turn(session: dict, user_text: str, call: CallFn) -> str:
     call(messages) 返回 {"content": str, "usage": {"in": int, "out": int}}。
 
     要求（顺序很重要）：
-        1. 先 build_messages，把它原样传给 call —— **只调用一次**
+        1. 先 build_messages，把它原样传给 call —— 【只调用一次】
            （W4 E4 的教训：调三次会多花两次钱，而且假 call 会直接 StopIteration）
-        2. 只有**成功拿到结果之后**，才把这一问一答追加进 session["history"]：
+        2. 只有【成功拿到结果之后】，才把这一问一答追加进 session["history"]：
                {"role": "user", "content": user_text}
                {"role": "assistant", "content": <content>}
         3. 把 usage 累加进 session["total_usage"]（in 加 in，out 加 out）
         4. 返回 content 字符串
-        5. **失败不留半截**：call 抛异常时，session 必须和调用前完全一样
+        5. 【失败不留半截】：call 抛异常时，session 必须和调用前完全一样
            （history 长度不变、total_usage 不变），异常照常往外抛，不要吞
 
     第 5 条是今天最重要的设计：把「半截对话」写进 history，
@@ -252,7 +252,7 @@ def run_turn_stream(session: dict, user_text: str, stream: StreamFn) -> str:
         1. 用 build_messages 得到 messages，把同一个列表传给 stream，只启动一次
         2. 把所有 delta 按顺序拼成一个字符串（不要边拼边写 history）
         3. done 那条里的 usage 累加进 session["total_usage"]
-        4. **拼完之后**才追加这一问一答到 history（和 C3 一样，失败不留半截）
+        4. 【拼完之后】才追加这一问一答到 history（和 C3 一样，失败不留半截）
         5. 中途 stream 抛异常 → session 完全不变、异常往外抛
         6. 返回完整文本
 
@@ -294,7 +294,7 @@ def cost_line(
     """TODO C5：把「估算」和「真实」分开，算出这一轮的成本
 
     返回 dict，五个键：
-        "estimated" : 发请求**之前**的本地估算 token（estimate_fn(messages)）
+        "estimated" : 发请求【之前】的本地估算 token（estimate_fn(messages)）
         "actual"    : API 返回的真实 usage["in"]
         "gap"       : actual - estimated（可能是负数，估算本来就是粗的）
         "cost"      : 这一轮的人民币费用（float）
@@ -303,7 +303,7 @@ def cost_line(
     要求：
         1. 默认 estimate_fn 用 11-04 的 `estimate_messages_tokens`，
            默认 cost_fn 用 11-04 的 `cost_of`
-        2. **算钱只能用 actual，绝不能用 estimated**
+        2. 算钱只能用 actual，绝不能用 estimated
            （§4.2：估算是刹车的传感器，不是里程表；记账一律用 usage）
         3. cost_of 的调用参数：(actual, usage["out"], price_in_per_m, price_out_per_m)
         4. 允许注入假的 estimate_fn / cost_fn —— 自检就是靠这个做到零成本的

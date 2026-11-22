@@ -1,6 +1,6 @@
 """W5 练习骨架 · few-shot 与结构化输入（11-03）
 
-今天要回答一个问题：**怎么让模型少猜？**
+今天要回答一个问题：怎么让模型少猜？
 —— 用例子告诉它「长这样」，用标签告诉它「这里是数据，不是指令」。
 
 用法：
@@ -17,7 +17,7 @@
 规则：
 1. 每个 TODO 自己写
 2. 自检只是行为检查，文末 3 道题才是真验收
-3. **默认运行不花钱** —— F5 的检查注入假 call，只有 --real 才真调 API
+3. 【默认运行不花钱】 —— F5 的检查注入假 call，只有 --real 才真调 API
 """
 
 from __future__ import annotations
@@ -123,7 +123,7 @@ def build_example_pairs(examples: list[tuple[str, str]]) -> list[dict]:
     ]
 
     要求：
-        1. 每个例子产出 **2 条**消息，user 在前、assistant 在后
+        1. 每个例子产出 【2 条】消息，user 在前、assistant 在后
         2. 输出总条数 = len(examples) * 2
         3. 保持传入顺序（顺序会影响模型对"最近例子"的权重）
         4. 空列表 → 返回 []
@@ -162,7 +162,7 @@ def build_with_fewshot(
         1. system 必须在第 0 位
         2. 最后一条必须是当前 user 文本（否则模型会去回答最后一个例子的输入）
         3. 例子为空时，退化成 [system, user] 两条
-        4. **校验**（任一不满足就 raise ValueError，不要静默返回半成品）：
+        4. 【校验】（任一不满足就 raise ValueError，不要静默返回半成品）：
            - system 为空、或 strip 之后是空字符串
            - 任何例子的「输入」或「输出」为空
 
@@ -194,7 +194,7 @@ def wrap_document(text: str, tag: str = "document") -> str:
     必须做的两件校验（任一不满足就 raise ValueError）：
         1. tag 必须是合法的标识符（只含字母数字下划线，且不以数字开头）
            —— 否则生成的不是合法标签
-        2. text 里**不能已经包含** `<tag>` 或 `</tag>`
+        2. text 里【不能已经包含】 `<tag>` 或 `</tag>`
            —— 否则用户可以用一段伪造的结束标签提前闭合，把后面的指令暴露给模型
               这就是「边界被破坏」，也是注入的常见入口
 
@@ -236,7 +236,7 @@ def detect_injection(text: str) -> list[str]:
     要求：
         1. 用 re.search 逐条匹配（不是 re.match —— 要能在句子中间命中）
         2. 同一个模式命中多次只记一次
-        3. **不要误报**：正常业务文档里会出现「直接输出到 Excel」「忽略大小写」这类话，
+        3. 【不要误报】：正常业务文档里会出现「直接输出到 Excel」「忽略大小写」这类话，
            它们在 INJECTION_PATTERNS 里匹配不上 —— 说明模式设计得还行，你别改宽它
 
     ⚠️ 这只是「检测」，不是「防御」。检出之后怎么处置（拒绝 / 转人工 / 降级）
@@ -273,12 +273,12 @@ def run_ab_test(texts: list[str], call: CallFn = call_llm) -> dict:
     其中：
         - "无例子"版：messages = [system: SYSTEM_NO_EXAMPLE, user: text]
         - "有例子"版：messages = build_with_fewshot(SYSTEM_FEWSHOT, EXAMPLES, text)
-        - valid 的判定：call 返回的 content **完全等于** VALID_LABELS 里的某一个
+        - valid 的判定：call 返回的 content 【完全等于】 VALID_LABELS 里的某一个
           （strip 之后再比，不接受「正面」「Positive」「positive。」这类漂移）
         - rate = valid / total，total=0 时给 0.0
 
     要求：
-        1. 每个 text 跑两次（先无例子、后有例子），**顺序固定**，别混着跑
+        1. 每个 text 跑两次（先无例子、后有例子），【顺序固定】，别混着跑
         2. 累加 usage，最后一起返回
         3. calls 必须等于 len(texts) * 2
 

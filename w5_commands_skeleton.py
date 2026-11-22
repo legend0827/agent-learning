@@ -1,10 +1,10 @@
 """W5 练习骨架 · 命令系统（11-06）
 
-今天要回答一个问题：**为什么有些输入必须由你的程序处理，一个 token 都不能发给模型？**
+今天要回答一个问题：为什么有些输入必须由你的程序处理，一个 token 都不能发给模型？
 
 昨天（11-05）把「会话状态」立起来了：system + history + total_usage。
 今天给这个状态加三个操作入口 —— `/clear` `/save` `/summary` ——
-并把一条最容易写错的规则钉死：**以 `/` 开头的输入，永远不发请求。**
+并把一条最容易写错的规则钉死：以 `/` 开头的输入，永远不发请求。
 
 用法：
     .venv/bin/python w5_commands_skeleton.py            # 自检（假函数，零成本，不联网）
@@ -13,17 +13,17 @@
 
 任务：
     D1 parse_command   把一行输入解析成「命令 or 普通消息」
-    D2 cmd_clear       清空对话 —— 但哪些东西**不能**清
+    D2 cmd_clear       清空对话 —— 但哪些东西【不能】清
     D3 cmd_save        落盘快照 —— 存压缩前还是压缩后
     D4 handle_line     统一分流入口 —— 命令绝不落到模型
 
 规则：
 1. 每个 TODO 自己写，别抄检查器里的期望值（照着填数字不算会）
 2. 自检只证明「行为对了」，不证明「你想清楚了」—— 文末 3 道题才是真验收
-3. **默认运行不花钱**：自检全部用假 session / 假 summarize，一行网络请求都没有
-4. ⚠️ **硬依赖 11-05 的 C1 / C3**（`new_session` / `run_turn`）。
+3. 【默认运行不花钱】：自检全部用假 session / 假 summarize，一行网络请求都没有
+4. ⚠️ 硬依赖 11-05 的 C1 / C3（`new_session` / `run_turn`）。
    没补 C1–C3 时，`--demo` / `--real` 会被 `_preflight()` 直接拦下 —— 这是故意的。
-5. ⚠️ **`--real` 需要单价快照**：从 `w5_budget_skeleton.py` 读 `PRICE_IN_PER_M` /
+5. ⚠️ `--real` 需要单价快照：从 `w5_budget_skeleton.py` 读 `PRICE_IN_PER_M` /
    `PRICE_OUT_PER_M`，仍为 None 就拒绝启动（峰谷定价，不许写死）。
 """
 
@@ -68,12 +68,12 @@ def parse_command(line: str) -> dict | None:
 
     要求：
         1. 先去掉首尾空白；空串 → None
-        2. **不以 "/" 开头 → None**；只要以 "/" 开头，**必须返回 dict，永不为 None**
+        2. 不以 "/" 开头 → None；只要以 "/" 开头，必须返回 dict，永不为 None
            （这是今天最重要的一条：斜杠开头的输入绝不能漏给模型）
         3. cmd 一律小写：`/CLEAR` 和 `/clear` 等价
-        4. 按**第一个空格**切分：`/save a b.json` 的 arg 是 `"a b.json"`；
+        4. 按【第一个空格】切分：`/save a b.json` 的 arg 是 `"a b.json"`；
            `/save` 的 arg 是 None（不是空字符串）
-        5. 只认 COMMANDS 里的名字。**不做前缀匹配** ——
+        5. 只认 COMMANDS 里的名字。【不做前缀匹配】 ——
            `/clearx` 和 `/cle` 都是 unknown，不能因为"长得像 clear"就当成 clear
         6. 不认识的命令 → `{"cmd": "unknown", "arg": ...}`，
            arg 里保留用户原本写的东西（提示信息要用）
@@ -107,10 +107,10 @@ def cmd_clear(session: dict) -> dict:
     """TODO D2：返回一个「对话已清空」的新 session
 
     要求：
-        1. **返回新 dict，不修改入参 session**（快照比对必须完全一致）
-        2. `history` → 空列表，而且是**新的 list**（不能和旧的共用同一个对象）
+        1. 返回新 dict，不修改入参 session（快照比对必须完全一致）
+        2. `history` → 空列表，而且是【新的 list】（不能和旧的共用同一个对象）
         3. `system` 原样保留（人格和边界不能丢，丢了助手就变成通用聊天机器人）
-        4. `total_usage` **原样保留** —— 清的是对话，不是账
+        4. `total_usage` 【原样保留】 —— 清的是对话，不是账
         5. session 以后可能多出别的键（比如 "compressed"），一律原样带过去，
            不要用「只挑三个键重建」的写法
 
@@ -133,25 +133,25 @@ def cmd_save(session: dict, path: str) -> dict:
 
     文件内容必须包含这 6 个键：
         "saved_at"    : str      当前时间，ISO 格式（见文件顶部已 import 的 datetime）
-        "compressed"  : bool     **今天固定 False** —— 存的是压缩前的原始对话
+        "compressed"  : bool     【今天固定 False】 —— 存的是压缩前的原始对话
         "system"      : str      本次会话的 system 原文
         "history"     : list     完整的一问一答
         "total_usage" : dict     累计真实 token
         "turns"       : int      轮数 = len(history) // 2
 
     要求：
-        1. **不修改 session**
+        1. 不修改 session
         2. 用 `json.dumps(..., ensure_ascii=False, indent=2)` 写文件（中文不要转义）
         3. 父目录不存在就自己建（`pathlib.Path(path).parent`，`parents=True, exist_ok=True`）
         4. 空 history 也要能保存成功（turns = 0），不许报错
         5. 返回的 "turns" 与文件里的 turns 一致，"bytes" 用文件真实大小
 
     为什么 compressed 今天就要写死 False：
-    明天（11-07）做完压缩，同一份 `/save` 要能写 True。**字段先定，实现后补** ——
+    明天（11-07）做完压缩，同一份 `/save` 要能写 True。字段先定，实现后补 ——
     这样今天存的快照和明天的快照能被同一段代码读，不用回头改格式。
 
     为什么快照必须存压缩前：三周后有人问「你那个助手当时说过什么」，
-    你要能拿出**原话**。存压缩后 = 把证据换成摘要，摘要是有损的，救不回来。
+    你要能拿出【原话】。存压缩后 = 把证据换成摘要，摘要是有损的，救不回来。
     """
     result = {
         "saved_at": datetime.now().isoformat(),
@@ -194,20 +194,20 @@ def handle_line(
     各分支要求：
         1. `/clear`  → 用 D2 的结果作为返回的 session；reply 里说明清掉了几轮
         2. `/save`   → 有 arg 就用 D3 存到 `os.path.join(save_dir, arg)`；
-           **没有 arg 时不存盘**，reply 里给出用法（`/save` 三个字要出现），
+           没有 arg 时不存盘，reply 里给出用法（`/save` 三个字要出现），
            session 原样返回，且不许抛异常
         3. `/summary`→ `summarize_fn` 为 None 时，reply 说明「11-07 才实现」，
-           **session 原样返回**（占位功能不许静默什么都不说，也不许假装做完了）；
-           注入了 summarize_fn 时，调用它并把**它的返回值**当新 session
+           session 原样返回（占位功能不许静默什么都不说，也不许假装做完了）；
+           注入了 summarize_fn 时，调用它并把【它的返回值】当新 session
         4. `/help`   → reply 用文件顶部的 HELP_TEXT
         5. `unknown` → reply 里必须出现「未知」二字和用户原本敲的那一行；
-           **session 原样返回**（写错的命令不能顺手把状态改了）
-        6. **所有命令分支 to_model 都必须是 False**，一个 token 都不许发
+           session 原样返回（写错的命令不能顺手把状态改了）
+        6. 所有命令分支 to_model 都必须是 False，一个 token 都不许发
 
     最容易写错的一条：把 unknown 当普通消息往下传（`return ...to_model: True`）。
     那样 `/summry` 会被当成一句话发给模型，模型会"扮演"一个命令解释器，
     甚至回你「已为您总结完毕」—— 用户以为命令生效了，实际什么都没发生，还白花一次钱。
-    **这个 bug 不抛异常。** 所以自检会逐条命令断言 to_model is False。
+    这个 bug 不抛异常。 所以自检会逐条命令断言 to_model is False。
     """
     cmd_info = parse_command(line)
     if cmd_info is None:  # 普通消息
